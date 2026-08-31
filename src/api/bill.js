@@ -51,3 +51,11 @@ export const getUnpaidAmount = () => {
     method: 'get'
   })
 }
+
+// 确认收款
+export const confirmPayment = (id) => {
+  return request({
+    url: `/bill/${id}/confirm`,
+    method: 'put'
+  })
+}

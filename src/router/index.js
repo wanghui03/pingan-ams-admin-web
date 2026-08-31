@@ -20,6 +20,18 @@ const routes = [
         meta: { title: '首页' }
       },
       {
+        path: 'tenant',
+        name: 'Tenant',
+        component: () => import('@/views/tenant/index.vue'),
+        meta: { title: '租户管理', roles: [0] } // 仅超级管理员可见
+      },
+      {
+        path: 'staff',
+        name: 'Staff',
+        component: () => import('@/views/staff/index.vue'),
+        meta: { title: '员工管理', roles: [2, 3] } // 员工和管理员可见
+      },
+      {
         path: 'building',
         name: 'Building',
         component: () => import('@/views/building/index.vue'),
@@ -51,9 +63,21 @@ const routes = [
       },
       {
         path: 'user',
-        name: 'User',
-        component: () => import('@/views/user/index.vue'),
-        meta: { title: '用户管理' }
+        name: 'TenantUser',
+        component: () => import('@/views/tenant-user/index.vue'),
+        meta: { title: '租客管理', roles: [2, 3] }
+      },
+      {
+        path: 'config',
+        name: 'Config',
+        component: () => import('@/views/config/index.vue'),
+        meta: { title: '系统配置', roles: [0, 3] }
+      },
+      {
+        path: 'log',
+        name: 'Log',
+        component: () => import('@/views/log/index.vue'),
+        meta: { title: '操作日志', roles: [0, 3] }
       }
     ]
   }

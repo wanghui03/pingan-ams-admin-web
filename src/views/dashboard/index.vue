@@ -97,16 +97,40 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { getDashboardStats } from '@/api/dashboard'
+import { ElMessage } from 'element-plus'
 
 const stats = ref({
   buildingCount: 0,
   roomCount: 0,
   contractCount: 0,
-  unpaidAmount: 0
+  unpaidAmount: 0,
+  occupiedRoomCount: 0,
+  vacantRoomCount: 0,
+  occupancyRate: '0%',
+  activeContractCount: 0,
+  paidAmount: 0,
+  overdueBillCount: 0,
+  pendingWorkOrderCount: 0
 })
 
+const loading = ref(false)
+
+const loadStats = async () => {
+  loading.value = true
+  try {
+    const res = await getDashboardStats()
+    stats.value = res.data
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+    ElMessage.error('加载统计数据失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
-  // TODO: 加载统计数据
+  loadStats()
 })
 </script>
 

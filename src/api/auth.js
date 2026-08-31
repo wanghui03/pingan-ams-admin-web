@@ -1,35 +1,33 @@
 import request from '@/utils/request'
 
-// 登录
-export const login = (data) => {
+/**
+ * 微信登录（小程序端）
+ */
+export const wxLogin = (data) => {
   return request({
-    url: '/auth/login',
+    url: '/auth/wx/login',
     method: 'post',
     data
   })
 }
 
-// 退出登录
+/**
+ * PC端登录（账号密码）
+ */
+export const adminLogin = (data) => {
+  return request({
+    url: '/auth/admin/login',
+    method: 'post',
+    data
+  })
+}
+
+/**
+ * 退出登录
+ */
 export const logout = () => {
   return request({
     url: '/auth/logout',
     method: 'post'
-  })
-}
-
-// 获取用户信息
-export const getUserInfo = () => {
-  return request({
-    url: '/user/info',
-    method: 'get'
-  })
-}
-
-// 更新用户信息
-export const updateUserInfo = (data) => {
-  return request({
-    url: '/user/info',
-    method: 'put',
-    data
   })
 }

@@ -43,3 +43,19 @@ export const handleWorkOrder = (id, handleResult, handleImages) => {
     params: { handleResult, handleImages }
   })
 }
+
+// 完成工单
+export const completeWorkOrder = (id) => {
+  return request({
+    url: `/work-order/${id}/complete`,
+    method: 'put'
+  })
+}
+
+// 关闭工单
+export const closeWorkOrder = (id) => {
+  return request({
+    url: `/work-order/${id}/close`,
+    method: 'put'
+  })
+}
