@@ -23,12 +23,30 @@
           <el-button type="primary" @click="handleAdd">
             <el-icon><Plus /></el-icon> 新增合同
           </el-button>
+          <el-button @click="handleBatchSubmit" :disabled="!selectedRows.length">
+            批量提交审核 ({{ selectedRows.length }})
+          </el-button>
         </el-col>
       </el-row>
     </el-card>
 
     <el-card>
-      <el-table :data="tableData" v-loading="loading" border stripe>
+      <el-alert
+        title="合同状态流转说明"
+        type="info"
+        :closable="false"
+        style="margin-bottom: 15px;"
+      >
+        <template #default>
+          <div style="font-size: 13px;">
+            <strong>草稿</strong> → 提交审核 → <strong>待审核</strong> → 审核通过 → <strong>生效中</strong>（自动生成首期账单）
+            <br>
+            生效中的合同到期后自动变为 <strong>已到期</strong>，也可手动 <strong>终止</strong>
+          </div>
+        </template>
+      </el-alert>
+      <el-table :data="tableData" v-loading="loading" border stripe @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="50" />
         <el-table-column prop="contractNo" label="合同编号" width="180" />
         <el-table-column prop="tenantName" label="租客" width="100" />
         <el-table-column prop="buildingName" label="楼栋" width="100" />
@@ -468,6 +486,32 @@ const handleTerminate = (row) => {
   }).then(async ({ value }) => {
     await terminateContract(row.id, value)
     ElMessage.success('合同已终止')
+    loadData()
+  })
+}
+
+// 批量选择
+const selectedRows = ref([])
+const handleSelectionChange = (rows) => {
+  selectedRows.value = rows.filter(r => r.status === 0) // 只允许草稿状态批量提交
+}
+
+// 批量提交审核
+const handleBatchSubmit = async () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先选择草稿状态的合同')
+    return
+  }
+  ElMessageBox.confirm(`确定要提交 ${selectedRows.value.length} 个合同进行审核吗？`, '批量提交', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    const promises = selectedRows.value.map(row =>
+      request({ url: `/contract/${row.id}/submit`, method: 'put' })
+    )
+    await Promise.all(promises)
+    ElMessage.success('批量提交成功')
     loadData()
   })
 }

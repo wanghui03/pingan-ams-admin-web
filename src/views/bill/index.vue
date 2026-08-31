@@ -35,6 +35,20 @@
     </el-card>
 
     <el-card>
+      <el-alert
+        title="💡 账单管理说明"
+        type="info"
+        :closable="true"
+        style="margin-bottom: 15px;"
+      >
+        <template #default>
+          <div style="font-size: 13px; line-height: 1.8;">
+            <strong>租金账单：</strong>合同审核通过后，系统会根据支付方式（月付/季付/半年付/年付）自动生成租金账单，无需手动创建<br>
+            <strong>手动新增：</strong>仅用于水电费、押金等其他费用，租金账单由系统自动生成<br>
+            <strong>逾期处理：</strong>系统每天自动检查，超过截止日期的账单会自动标记为"已逾期"
+          </div>
+        </template>
+      </el-alert>
       <el-table :data="tableData" v-loading="loading" border stripe>
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="tenantName" label="租客" width="100" />
