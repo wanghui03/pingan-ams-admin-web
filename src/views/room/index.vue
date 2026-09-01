@@ -28,7 +28,7 @@
           <el-button @click="resetSearch">重置</el-button>
         </el-col>
         <el-col :span="10" style="text-align: right;">
-          <el-button type="primary" @click="handleAdd">
+          <el-button v-permission="'room:create'" type="primary" @click="handleAdd">
             <el-icon><Plus /></el-icon> 新增房间
           </el-button>
         </el-col>
@@ -54,8 +54,8 @@
         <el-table-column prop="address" label="地址" show-overflow-tooltip />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除吗？" @confirm="handleDelete(row.id)">
+            <el-button v-permission="'room:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-permission="'room:delete'" title="确定删除吗？" @confirm="handleDelete(row.id)">
               <template #reference>
                 <el-button size="small" type="danger">删除</el-button>
               </template>

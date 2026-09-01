@@ -52,10 +52,11 @@ export const getUnpaidAmount = () => {
   })
 }
 
-// 确认收款
-export const confirmPayment = (id) => {
+// 确认收款（标记账单已支付）
+export const confirmPayment = (id, amount) => {
   return request({
-    url: `/bill/${id}/confirm`,
-    method: 'put'
+    url: `/bill/${id}/pay`,
+    method: 'put',
+    params: { paidAmount: amount, transactionNo: '' }
   })
 }

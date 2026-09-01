@@ -43,9 +43,10 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="160" />
-        <el-table-column label="操作" width="250" fixed="right">
+        <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button size="small" type="primary" @click="handleAssignRole(row)">分配角色</el-button>
             <el-button
               size="small"
               :type="row.status === 1 ? 'warning' : 'success'"
@@ -103,6 +104,33 @@
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 分配角色弹窗 -->
+    <el-dialog v-model="roleDialogVisible" title="分配角色" width="500px">
+      <el-form label-width="100px">
+        <el-form-item label="员工姓名">
+          <span>{{ currentStaff.realName }}</span>
+        </el-form-item>
+        <el-form-item label="登录账号">
+          <span>{{ currentStaff.username }}</span>
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="selectedRoleIds" multiple placeholder="请选择角色" style="width: 100%;">
+            <el-option
+              v-for="role in allRoles"
+              :key="role.id"
+              :label="role.roleName"
+              :value="role.id"
+              :disabled="role.status === 0"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="roleDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitAssignRole" :loading="roleSubmitLoading">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -110,6 +138,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { getAllRoles, getUserRoles, assignUserRoles } from '@/api/role'
+import { phoneRule, usernameRule, passwordRule } from '@/utils/validators'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -134,10 +164,10 @@ const form = reactive({
 })
 
 const rules = {
-  username: [{ required: true, message: '请输入登录账号', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入登录密码', trigger: 'blur' }],
+  username: [usernameRule],
+  password: [passwordRule],
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
+  phone: [phoneRule],
   userType: [{ required: true, message: '请选择角色', trigger: 'change' }]
 }
 
@@ -244,6 +274,52 @@ const handleToggleStatus = (row) => {
     ElMessage.success(`${action}成功`)
     loadData()
   })
+}
+
+// 角色分配相关
+const roleDialogVisible = ref(false)
+const currentStaff = ref({})
+const selectedRoleIds = ref([])
+const allRoles = ref([])
+const roleSubmitLoading = ref(false)
+
+// 加载所有角色
+const loadAllRoles = async () => {
+  try {
+    const res = await getAllRoles()
+    allRoles.value = res.data
+  } catch (error) {
+    console.error('加载角色列表失败', error)
+  }
+}
+
+// 打开角色分配对话框
+const handleAssignRole = async (row) => {
+  currentStaff.value = row
+  await loadAllRoles()
+  
+  // 获取当前员工的角色
+  try {
+    const res = await getUserRoles(row.id)
+    selectedRoleIds.value = res.data.map(role => role.id)
+  } catch (error) {
+    selectedRoleIds.value = []
+  }
+  
+  roleDialogVisible.value = true
+}
+
+// 提交角色分配
+const submitAssignRole = async () => {
+  roleSubmitLoading.value = true
+  try {
+    await assignUserRoles(currentStaff.value.id, selectedRoleIds.value)
+    ElMessage.success('角色分配成功')
+    roleDialogVisible.value = false
+    loadData()
+  } finally {
+    roleSubmitLoading.value = false
+  }
 }
 
 onMounted(() => {

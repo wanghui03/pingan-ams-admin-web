@@ -6,7 +6,7 @@
 
     <!-- 搜索栏 -->
     <el-card class="search-form">
-      <el-button type="primary" @click="handleAdd">
+      <el-button v-permission="'building:create'" type="primary" @click="handleAdd">
         <el-icon><Plus /></el-icon> 新增楼栋
       </el-button>
     </el-card>
@@ -29,8 +29,8 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-popconfirm title="确定删除吗？" @confirm="handleDelete(row.id)">
+            <el-button v-permission="'building:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-popconfirm v-permission="'building:delete'" title="确定删除吗？" @confirm="handleDelete(row.id)">
               <template #reference>
                 <el-button size="small" type="danger">删除</el-button>
               </template>

@@ -130,6 +130,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { phoneRule, phoneRuleOptional, idCardRuleOptional } from '@/utils/validators'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -154,7 +155,8 @@ const form = reactive({
 
 const rules = {
   realName: [{ required: true, message: '请输入真实姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }]
+  phone: [phoneRule],
+  idCard: [idCardRuleOptional]
 }
 
 // 详情相关

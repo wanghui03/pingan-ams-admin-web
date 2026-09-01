@@ -17,67 +17,73 @@ const routes = [
         path: 'dashboard',
         name: 'Dashboard',
         component: () => import('@/views/dashboard/index.vue'),
-        meta: { title: '首页' }
+        meta: { title: '首页', icon: 'HomeFilled', roles: [0, 1, 2, 3] }
       },
       {
         path: 'tenant',
         name: 'Tenant',
         component: () => import('@/views/tenant/index.vue'),
-        meta: { title: '租户管理', roles: [0] } // 仅超级管理员可见
+        meta: { title: '租户管理', icon: 'Platform', roles: [0] }
       },
       {
         path: 'staff',
         name: 'Staff',
         component: () => import('@/views/staff/index.vue'),
-        meta: { title: '员工管理', roles: [2, 3] } // 员工和管理员可见
+        meta: { title: '员工管理', icon: 'Avatar', roles: [3] }
       },
       {
         path: 'building',
         name: 'Building',
         component: () => import('@/views/building/index.vue'),
-        meta: { title: '楼栋管理' }
+        meta: { title: '楼栋管理', icon: 'OfficeBuilding', roles: [0, 1, 2, 3] }
       },
       {
         path: 'room',
         name: 'Room',
         component: () => import('@/views/room/index.vue'),
-        meta: { title: '房间管理' }
+        meta: { title: '房间管理', icon: 'House', roles: [0, 1, 2, 3] }
       },
       {
         path: 'contract',
         name: 'Contract',
         component: () => import('@/views/contract/index.vue'),
-        meta: { title: '合同管理' }
+        meta: { title: '合同管理', icon: 'Document', roles: [0, 1, 2, 3] }
       },
       {
         path: 'bill',
         name: 'Bill',
         component: () => import('@/views/bill/index.vue'),
-        meta: { title: '账单管理' }
+        meta: { title: '账单管理', icon: 'Money', roles: [0, 1, 2, 3] }
       },
       {
         path: 'workorder',
         name: 'WorkOrder',
         component: () => import('@/views/workorder/index.vue'),
-        meta: { title: '工单管理' }
+        meta: { title: '工单管理', icon: 'Tickets', roles: [0, 1, 2, 3] }
       },
       {
         path: 'user',
         name: 'TenantUser',
         component: () => import('@/views/tenant-user/index.vue'),
-        meta: { title: '租客管理', roles: [2, 3] }
+        meta: { title: '租客管理', icon: 'User', roles: [0, 1, 2, 3] }
       },
       {
         path: 'config',
         name: 'Config',
         component: () => import('@/views/config/index.vue'),
-        meta: { title: '系统配置', roles: [0, 3] }
+        meta: { title: '系统配置', icon: 'Setting', roles: [0] }
       },
       {
         path: 'log',
         name: 'Log',
         component: () => import('@/views/log/index.vue'),
-        meta: { title: '操作日志', roles: [0, 3] }
+        meta: { title: '操作日志', icon: 'Notebook', roles: [0] }
+      },
+      {
+        path: 'role',
+        name: 'Role',
+        component: () => import('@/views/role/index.vue'),
+        meta: { title: '角色管理', icon: 'UserFilled', roles: [0] }
       }
     ]
   }
@@ -98,7 +104,13 @@ router.beforeEach((to, from, next) => {
     if (!userStore.token) {
       next('/login')
     } else {
-      next()
+      // 检查角色权限
+      const roles = to.meta.roles
+      if (roles && !roles.includes(userStore.userInfo.userType)) {
+        next('/dashboard')
+      } else {
+        next()
+      }
     }
   }
 })

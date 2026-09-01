@@ -19,7 +19,7 @@
             <el-option label="租金" :value="1" />
             <el-option label="水电费" :value="2" />
             <el-option label="押金" :value="3" />
-            <el-option label="其他" :value="9" />
+            <el-option label="其他" :value="4" />
           </el-select>
         </el-col>
         <el-col :span="4">
@@ -27,7 +27,7 @@
           <el-button @click="resetSearch">重置</el-button>
         </el-col>
         <el-col :span="10" style="text-align: right;">
-          <el-button type="primary" @click="handleAdd">
+          <el-button v-permission="'bill:create'" type="primary" @click="handleAdd">
             <el-icon><Plus /></el-icon> 新增账单
           </el-button>
         </el-col>
@@ -64,8 +64,8 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="handleDetail(row)">详情</el-button>
-            <el-button v-if="row.status === 0" size="small" type="success" @click="handleConfirmPay(row)">确认收款</el-button>
+            <el-button v-permission="'bill:detail'" size="small" @click="handleDetail(row)">详情</el-button>
+            <el-button v-if="row.status === 0" v-permission="'bill:pay'" size="small" type="success" @click="handleConfirmPay(row)">确认收款</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -99,9 +99,9 @@
         <el-form-item label="账单类型" prop="billType">
           <el-select v-model="form.billType" style="width: 100%;">
             <el-option label="租金" :value="1" />
-            <el-option label="押金" :value="2" />
-            <el-option label="水电费" :value="3" />
-            <el-option label="其他" :value="9" />
+            <el-option label="水电费" :value="2" />
+            <el-option label="押金" :value="3" />
+            <el-option label="其他" :value="4" />
           </el-select>
         </el-form-item>
         <el-form-item label="金额(元)" prop="amount">
@@ -320,7 +320,7 @@ const handleConfirmPay = (row) => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
-    await confirmPayment(row.id)
+    await confirmPayment(row.id, row.amount)
     ElMessage.success('已确认收款')
     loadData()
   })

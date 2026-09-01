@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -22,11 +22,44 @@ export const useUserStore = defineStore('user', () => {
     localStorage.removeItem('userInfo')
   }
 
+  // 获取用户角色列表
+  const roles = computed(() => userInfo.value.roles || [])
+
+  // 获取用户权限列表
+  const permissions = computed(() => userInfo.value.permissions || [])
+
+  // 检查是否有指定角色
+  const hasRole = (role) => {
+    return roles.value.includes(role)
+  }
+
+  // 检查是否有指定权限
+  const hasPermission = (permission) => {
+    // 超级管理员拥有所有权限
+    if (roles.value.includes('super_admin')) {
+      return true
+    }
+    return permissions.value.includes(permission)
+  }
+
+  // 检查是否有任一权限
+  const hasAnyPermission = (permissionList) => {
+    if (roles.value.includes('super_admin')) {
+      return true
+    }
+    return permissionList.some(p => permissions.value.includes(p))
+  }
+
   return {
     token,
     userInfo,
     setToken,
     setUserInfo,
-    logout
+    logout,
+    roles,
+    permissions,
+    hasRole,
+    hasPermission,
+    hasAnyPermission
   }
 })

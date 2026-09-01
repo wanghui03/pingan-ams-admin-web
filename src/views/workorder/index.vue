@@ -27,7 +27,7 @@
           <el-button @click="resetSearch">重置</el-button>
         </el-col>
         <el-col :span="10" style="text-align: right;">
-          <el-button type="primary" @click="handleAdd">
+          <el-button v-permission="'workorder:create'" type="primary" @click="handleAdd">
             <el-icon><Plus /></el-icon> 新增工单
           </el-button>
         </el-col>
@@ -50,10 +50,10 @@
         <el-table-column prop="createTime" label="创建时间" width="160" />
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="handleDetail(row)">详情</el-button>
-            <el-button v-if="row.status === 0" size="small" type="primary" @click="handleAssign(row)">分配</el-button>
-            <el-button v-if="row.status === 1" size="small" type="success" @click="handleComplete(row)">完成</el-button>
-            <el-button v-if="row.status === 0 || row.status === 1" size="small" @click="handleClose(row)">关闭</el-button>
+            <el-button v-permission="'workorder:detail'" size="small" @click="handleDetail(row)">详情</el-button>
+            <el-button v-if="row.status === 0" v-permission="'workorder:assign'" size="small" type="primary" @click="handleAssign(row)">分配</el-button>
+            <el-button v-if="row.status === 1" v-permission="'workorder:complete'" size="small" type="success" @click="handleComplete(row)">完成</el-button>
+            <el-button v-if="row.status === 0 || row.status === 1" v-permission="'workorder:close'" size="small" @click="handleClose(row)">关闭</el-button>
           </template>
         </el-table-column>
       </el-table>

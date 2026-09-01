@@ -102,6 +102,17 @@
         <el-form-item label="地址">
           <el-input v-model="form.address" placeholder="请输入地址" />
         </el-form-item>
+
+        <el-divider v-if="!isEdit">管理员账号</el-divider>
+        <el-form-item v-if="!isEdit" label="登录账号" prop="adminUsername">
+          <el-input v-model="form.adminUsername" placeholder="请输入管理员登录账号" />
+        </el-form-item>
+        <el-form-item v-if="!isEdit" label="登录密码" prop="adminPassword">
+          <el-input v-model="form.adminPassword" type="password" placeholder="请输入管理员登录密码（默认admin123）" show-password />
+        </el-form-item>
+        <el-form-item v-if="!isEdit" label="管理员姓名">
+          <el-input v-model="form.adminRealName" placeholder="请输入管理员真实姓名（选填）" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -115,6 +126,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { phoneRule, emailRuleOptional } from '@/utils/validators'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -136,14 +148,20 @@ const form = reactive({
   contactPerson: '',
   contactPhone: '',
   email: '',
-  address: ''
+  address: '',
+  adminUsername: '',
+  adminPassword: 'admin123',
+  adminRealName: ''
 })
 
 const rules = {
   name: [{ required: true, message: '请输入租户名称', trigger: 'blur' }],
   type: [{ required: true, message: '请选择租户类型', trigger: 'change' }],
   contactPerson: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
-  contactPhone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }]
+  contactPhone: [phoneRule],
+  email: [emailRuleOptional],
+  adminUsername: [{ required: true, message: '请输入管理员登录账号', trigger: 'blur' }],
+  adminPassword: [{ required: true, message: '请输入管理员登录密码', trigger: 'blur' }]
 }
 
 const loadData = async () => {
@@ -179,7 +197,10 @@ const handleAdd = () => {
     contactPerson: '',
     contactPhone: '',
     email: '',
-    address: ''
+    address: '',
+    adminUsername: '',
+    adminPassword: 'admin123',
+    adminRealName: ''
   })
   dialogVisible.value = true
 }

@@ -12,61 +12,13 @@
         text-color="#bfcbd9"
         active-text-color="#409eff"
       >
-        <el-menu-item index="/dashboard">
-          <el-icon><HomeFilled /></el-icon>
-          <span>首页</span>
-        </el-menu-item>
         <el-menu-item
-          v-if="userStore.userInfo.userType === 0"
-          index="/tenant"
+          v-for="item in menuItems"
+          :key="item.path"
+          :index="item.path"
         >
-          <el-icon><OfficeBuilding /></el-icon>
-          <span>租户管理</span>
-        </el-menu-item>
-        <el-menu-item
-          v-if="userStore.userInfo.userType === 2 || userStore.userInfo.userType === 3"
-          index="/staff"
-        >
-          <el-icon><UserFilled /></el-icon>
-          <span>员工管理</span>
-        </el-menu-item>
-        <el-menu-item index="/building">
-          <el-icon><OfficeBuilding /></el-icon>
-          <span>楼栋管理</span>
-        </el-menu-item>
-        <el-menu-item index="/room">
-          <el-icon><House /></el-icon>
-          <span>房间管理</span>
-        </el-menu-item>
-        <el-menu-item index="/contract">
-          <el-icon><Document /></el-icon>
-          <span>合同管理</span>
-        </el-menu-item>
-        <el-menu-item index="/bill">
-          <el-icon><Money /></el-icon>
-          <span>账单管理</span>
-        </el-menu-item>
-        <el-menu-item index="/workorder">
-          <el-icon><Tickets /></el-icon>
-          <span>工单管理</span>
-        </el-menu-item>
-        <el-menu-item index="/user">
-          <el-icon><User /></el-icon>
-          <span>租客管理</span>
-        </el-menu-item>
-        <el-menu-item
-          v-if="userStore.userInfo.userType === 0 || userStore.userInfo.userType === 3"
-          index="/config"
-        >
-          <el-icon><Setting /></el-icon>
-          <span>系统配置</span>
-        </el-menu-item>
-        <el-menu-item
-          v-if="userStore.userInfo.userType === 0 || userStore.userInfo.userType === 3"
-          index="/log"
-        >
-          <el-icon><Document /></el-icon>
-          <span>操作日志</span>
+          <el-icon><component :is="item.icon" /></el-icon>
+          <span>{{ item.title }}</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -134,6 +86,24 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const activeMenu = computed(() => route.path)
+
+// 从路由配置动态生成菜单（根据 meta.roles 过滤）
+const menuItems = computed(() => {
+  const userType = userStore.userInfo.userType
+  const mainRoute = router.options.routes.find(r => r.path === '/')
+  if (!mainRoute || !mainRoute.children) return []
+
+  return mainRoute.children
+    .filter(child => {
+      const roles = child.meta?.roles
+      return !roles || roles.includes(userType)
+    })
+    .map(child => ({
+      path: '/' + child.path,
+      title: child.meta?.title || child.name,
+      icon: child.meta?.icon || 'Document'
+    }))
+})
 
 // 修改密码相关
 const passwordDialogVisible = ref(false)
@@ -207,7 +177,6 @@ const handleChangePassword = async () => {
         })
         ElMessage.success('密码修改成功，请重新登录')
         passwordDialogVisible.value = false
-        // 退出登录
         userStore.logout()
         setTimeout(() => {
           router.push('/login')

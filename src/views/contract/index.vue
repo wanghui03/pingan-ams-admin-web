@@ -20,10 +20,10 @@
           <el-button @click="searchForm.status = null; loadData()">重置</el-button>
         </el-col>
         <el-col :span="15" style="text-align: right;">
-          <el-button type="primary" @click="handleAdd">
+          <el-button v-permission="'contract:create'" type="primary" @click="handleAdd">
             <el-icon><Plus /></el-icon> 新增合同
           </el-button>
-          <el-button @click="handleBatchSubmit" :disabled="!selectedRows.length">
+          <el-button v-permission="'contract:review'" @click="handleBatchSubmit" :disabled="selectedRows.length === 0">
             批量提交审核 ({{ selectedRows.length }})
           </el-button>
         </el-col>
@@ -55,35 +55,46 @@
         <el-table-column prop="endDate" label="结束日期" width="120" />
         <el-table-column prop="monthlyRent" label="月租金(元)" width="110" />
         <el-table-column prop="paymentMethodDesc" label="支付方式" width="90" />
-        <el-table-column prop="statusDesc" label="状态" width="90">
+        <el-table-column prop="statusDesc" label="合同状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusTagType(row.status)">{{ row.statusDesc }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="signStatusDesc" label="签署状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.signStatus === 1 ? 'success' : 'warning'" size="small">
+              {{ row.signStatus === 1 ? '已签署' : '未签署' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="remainDays" label="剩余天数" width="90" />
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="handleDetail(row)">详情</el-button>
+            <el-button v-permission="'contract:detail'" size="small" @click="handleDetail(row)">详情</el-button>
             <el-button
               v-if="row.status === 0"
+              v-permission="'contract:submit'"
               size="small"
               type="primary"
               @click="handleSubmitForReview(row)"
             >提交审核</el-button>
             <el-button
               v-if="row.status === 1"
+              v-permission="'contract:approve'"
               size="small"
               type="success"
               @click="handleApprove(row)"
             >审核通过</el-button>
             <el-button
               v-if="row.status === 1"
+              v-permission="'contract:reject'"
               size="small"
               type="warning"
               @click="handleReject(row)"
             >审核驳回</el-button>
             <el-button
               v-if="row.status === 0 || row.status === 2"
+              v-permission="'contract:terminate'"
               size="small"
               type="danger"
               @click="handleTerminate(row)"
@@ -493,25 +504,41 @@ const handleTerminate = (row) => {
 // 批量选择
 const selectedRows = ref([])
 const handleSelectionChange = (rows) => {
-  selectedRows.value = rows.filter(r => r.status === 0) // 只允许草稿状态批量提交
+  selectedRows.value = rows // 保存所有选中的行
 }
 
 // 批量提交审核
 const handleBatchSubmit = async () => {
   if (selectedRows.value.length === 0) {
-    ElMessage.warning('请先选择草稿状态的合同')
+    ElMessage.warning('请先选择合同')
     return
   }
-  ElMessageBox.confirm(`确定要提交 ${selectedRows.value.length} 个合同进行审核吗？`, '批量提交', {
+  
+  // 过滤出草稿状态的合同
+  const draftContracts = selectedRows.value.filter(r => r.status === 0)
+  
+  if (draftContracts.length === 0) {
+    ElMessage.warning('所选合同中没有草稿状态的合同，只有草稿状态的合同才能提交审核')
+    return
+  }
+  
+  // 如果有非草稿状态的合同，提示用户
+  const skippedCount = selectedRows.value.length - draftContracts.length
+  let confirmMsg = `确定要提交 ${draftContracts.length} 个草稿合同进行审核吗？`
+  if (skippedCount > 0) {
+    confirmMsg += `\n（已跳过 ${skippedCount} 个非草稿状态的合同）`
+  }
+  
+  ElMessageBox.confirm(confirmMsg, '批量提交', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
   }).then(async () => {
-    const promises = selectedRows.value.map(row =>
+    const promises = draftContracts.map(row =>
       request({ url: `/contract/${row.id}/submit`, method: 'put' })
     )
     await Promise.all(promises)
-    ElMessage.success('批量提交成功')
+    ElMessage.success(`成功提交 ${draftContracts.length} 个合同`)
     loadData()
   })
 }
