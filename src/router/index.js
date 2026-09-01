@@ -50,6 +50,12 @@ const routes = [
         meta: { title: '合同管理', icon: 'Document', roles: [0, 1, 2, 3] }
       },
       {
+        path: 'contract-change',
+        name: 'ContractChange',
+        component: () => import('@/views/contractChange/index.vue'),
+        meta: { title: '合同变更', icon: 'Edit', roles: [0, 2, 3] }
+      },
+      {
         path: 'bill',
         name: 'Bill',
         component: () => import('@/views/bill/index.vue'),
@@ -84,6 +90,12 @@ const routes = [
         name: 'Role',
         component: () => import('@/views/role/index.vue'),
         meta: { title: '角色管理', icon: 'UserFilled', roles: [0] }
+      },
+      {
+        path: 'notification',
+        name: 'Notification',
+        component: () => import('@/views/notification/index.vue'),
+        meta: { title: '消息通知', icon: 'Bell', roles: [0, 1, 2, 3] }
       }
     ]
   }
