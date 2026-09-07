@@ -61,3 +61,14 @@ export const getUnreadNotificationCount = () => {
     method: 'get'
   })
 }
+
+/**
+ * 发布系统公告
+ */
+export const publishAnnouncement = (data) => {
+  return request({
+    url: '/notification/announcement',
+    method: 'post',
+    data
+  })
+}

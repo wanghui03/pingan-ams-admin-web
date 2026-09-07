@@ -20,42 +20,52 @@ export const getWorkOrderDetail = (id) => {
 // 创建工单
 export const createWorkOrder = (data) => {
   return request({
-    url: '/work-order',
+    url: '/workorder',
     method: 'post',
     data
   })
 }
 
+// 更新工单
+export const updateWorkOrder = (id, data) => {
+  return request({
+    url: `/work-order/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 删除工单
+export const deleteWorkOrder = (id) => {
+  return request({
+    url: `/work-order/${id}`,
+    method: 'delete'
+  })
+}
+
 // 分配工单
-export const assignWorkOrder = (id, handlerId) => {
+export const assignWorkOrder = (id, data) => {
   return request({
     url: `/work-order/${id}/assign`,
-    method: 'put',
-    params: { handlerId }
+    method: 'post',
+    data
   })
 }
 
 // 处理工单
-export const handleWorkOrder = (id, handleResult, handleImages) => {
+export const processWorkOrder = (id, data) => {
   return request({
-    url: `/work-order/${id}/handle`,
-    method: 'put',
-    params: { handleResult, handleImages }
-  })
-}
-
-// 完成工单
-export const completeWorkOrder = (id) => {
-  return request({
-    url: `/work-order/${id}/complete`,
-    method: 'put'
+    url: `/work-order/${id}/process`,
+    method: 'post',
+    data
   })
 }
 
 // 关闭工单
-export const closeWorkOrder = (id) => {
+export const closeWorkOrder = (id, data) => {
   return request({
     url: `/work-order/${id}/close`,
-    method: 'put'
+    method: 'post',
+    data
   })
 }

@@ -26,37 +26,36 @@ export const createBill = (data) => {
   })
 }
 
-// 标记账单已支付
-export const markAsPaid = (id, paidAmount, transactionNo) => {
+// 更新账单
+export const updateBill = (id, data) => {
+  return request({
+    url: `/bill/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 删除账单
+export const deleteBill = (id) => {
+  return request({
+    url: `/bill/${id}`,
+    method: 'delete'
+  })
+}
+
+// 确认收款
+export const confirmPayment = (id, data) => {
   return request({
     url: `/bill/${id}/pay`,
-    method: 'put',
-    params: { paidAmount, transactionNo }
+    method: 'post',
+    data
   })
 }
 
-// 取消账单
-export const cancelBill = (id, reason) => {
+// 发送账单提醒
+export const sendBillReminder = (id) => {
   return request({
-    url: `/bill/${id}/cancel`,
-    method: 'put',
-    params: { reason }
-  })
-}
-
-// 获取待支付总金额
-export const getUnpaidAmount = () => {
-  return request({
-    url: '/bill/unpaid-amount',
-    method: 'get'
-  })
-}
-
-// 确认收款（标记账单已支付）
-export const confirmPayment = (id, amount) => {
-  return request({
-    url: `/bill/${id}/pay`,
-    method: 'put',
-    params: { paidAmount: amount, transactionNo: '' }
+    url: `/bill/${id}/remind`,
+    method: 'post'
   })
 }

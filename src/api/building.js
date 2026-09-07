@@ -9,7 +9,7 @@ export const getBuildingList = (params) => {
   })
 }
 
-// 获取所有楼栋（下拉选择用）
+// 获取所有楼栋
 export const getAllBuildings = () => {
   return request({
     url: '/building/all',

@@ -38,3 +38,38 @@ $header-height: 60px;
   background: #fff;
   border-radius: 4px;
 }
+
+// 分页容器通用样式
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+// 页面头部操作区
+.page-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+// 表格操作按钮组
+.table-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+// 金额样式
+.amount {
+  color: #e6a23c;
+  font-weight: bold;
+}
+
+// 状态标签统一样式
+.status-tag {
+  min-width: 60px;
+  text-align: center;
+}

@@ -135,6 +135,18 @@
             </el-form-item>
           </el-col>
         </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="水费单价(元/吨)">
+              <el-input-number v-model="form.waterPrice" :min="0" :precision="2" style="width: 100%;" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="电费单价(元/度)">
+              <el-input-number v-model="form.electricityPrice" :min="0" :precision="2" style="width: 100%;" />
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="朝向">
           <el-select v-model="form.orientation" placeholder="选择朝向" style="width: 100%;">
             <el-option label="东" value="东" />
@@ -192,6 +204,8 @@ const form = reactive({
   layout: '',
   monthlyRent: null,
   deposit: null,
+  waterPrice: null,
+  electricityPrice: null,
   orientation: '',
   address: '',
   description: ''
@@ -242,6 +256,7 @@ const handleAdd = () => {
   Object.assign(form, {
     buildingId: null, roomNo: '', floor: 1, roomType: '',
     area: null, layout: '', monthlyRent: null, deposit: null,
+    waterPrice: null, electricityPrice: null,
     orientation: '', address: '', description: ''
   })
   loadBuildings()
@@ -260,6 +275,8 @@ const handleEdit = (row) => {
     layout: row.layout,
     monthlyRent: row.monthlyRent,
     deposit: row.deposit,
+    waterPrice: row.waterPrice,
+    electricityPrice: row.electricityPrice,
     orientation: row.orientation,
     address: row.address,
     description: row.description

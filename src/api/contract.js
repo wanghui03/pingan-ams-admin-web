@@ -35,11 +35,46 @@ export const updateContract = (id, data) => {
   })
 }
 
-// 终止合同
-export const terminateContract = (id, reason) => {
+// 删除合同
+export const deleteContract = (id) => {
   return request({
-    url: `/contract/${id}/terminate`,
-    method: 'put',
-    params: { reason }
+    url: `/contract/${id}`,
+    method: 'delete'
+  })
+}
+
+// 审核合同
+export const auditContract = (id, data) => {
+  return request({
+    url: `/contract/${id}/audit`,
+    method: 'post',
+    data
+  })
+}
+
+// 获取合同变更列表
+export const getContractChangeList = (params) => {
+  return request({
+    url: '/contract/change/list',
+    method: 'get',
+    params
+  })
+}
+
+// 创建合同变更
+export const createContractChange = (data) => {
+  return request({
+    url: '/contract/change',
+    method: 'post',
+    data
+  })
+}
+
+// 审核合同变更
+export const auditContractChange = (id, data) => {
+  return request({
+    url: `/contract/change/${id}/audit`,
+    method: 'post',
+    data
   })
 }
