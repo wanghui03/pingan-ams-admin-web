@@ -136,6 +136,33 @@
             </template>
         </el-dialog>
 
+        <!-- 账单详情弹窗 -->
+        <el-dialog v-model="detailVisible" title="账单详情" width="600px">
+            <el-descriptions :column="2" border v-if="detailData">
+                <el-descriptions-item label="账单编号">{{ detailData.billNo }}</el-descriptions-item>
+                <el-descriptions-item label="合同编号">{{ detailData.contractNo }}</el-descriptions-item>
+                <el-descriptions-item label="租客">{{ detailData.tenantName }}</el-descriptions-item>
+                <el-descriptions-item label="房间">{{ detailData.buildingName }}{{ detailData.roomNo }}</el-descriptions-item>
+                <el-descriptions-item label="账单类型">{{ detailData.billTypeDesc }}</el-descriptions-item>
+                <el-descriptions-item label="状态">
+                    <el-tag :type="statusTagType(detailData.status)">{{ detailData.statusDesc }}</el-tag>
+                </el-descriptions-item>
+                <el-descriptions-item label="账单金额">¥{{ detailData.amount }}</el-descriptions-item>
+                <el-descriptions-item label="已付金额">¥{{ detailData.paidAmount || 0 }}</el-descriptions-item>
+                <el-descriptions-item label="账单日期">{{ detailData.billDate }}</el-descriptions-item>
+                <el-descriptions-item label="截止日期">{{ detailData.dueDate }}</el-descriptions-item>
+                <el-descriptions-item label="逾期天数" v-if="detailData.overdueDays > 0">
+                    <span style="color: #F56C6C">{{ detailData.overdueDays }} 天</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="支付时间" v-if="detailData.paidTime">{{ detailData.paidTime }}</el-descriptions-item>
+                <el-descriptions-item label="备注" :span="2">{{ detailData.remark || '-' }}</el-descriptions-item>
+                <el-descriptions-item label="创建时间">{{ detailData.createTime }}</el-descriptions-item>
+            </el-descriptions>
+            <template #footer>
+                <el-button @click="detailVisible = false">关闭</el-button>
+            </template>
+        </el-dialog>
+
         <!-- 合同选择弹窗 -->
         <el-dialog v-model="contractSelectVisible" title="选择合同" width="800px" append-to-body>
             <el-row :gutter="10" style="margin-bottom: 15px">
@@ -176,7 +203,7 @@
 <script setup>
     import { ref, reactive, onMounted } from 'vue';
     import { ElMessage, ElMessageBox } from 'element-plus';
-    import { getBillList, createBill, confirmPayment, sendBillReminder } from '@/api/bill';
+    import { getBillList, createBill, confirmPayment, sendBillReminder, getBillDetail, cancelBill } from '@/api/bill';
     import request from '@/utils/request';
 
     const loading = ref(false);
@@ -206,6 +233,10 @@
         billDate: [{ required: true, message: '请选择账单日期', trigger: 'change' }],
         dueDate: [{ required: true, message: '请选择截止日期', trigger: 'change' }],
     };
+
+    // 详情弹窗
+    const detailVisible = ref(false);
+    const detailData = ref(null);
 
     // 选中的合同
     const selectedContract = ref(null);
@@ -323,8 +354,28 @@
         });
     };
 
-    const handleDetail = row => {
-        ElMessage.info('账单详情功能待完善');
+    const handleDetail = async (row) => {
+      try {
+        const res = await getBillDetail(row.id);
+        detailData.value = res.data;
+        detailVisible.value = true;
+      } catch (error) {
+        ElMessage.error('获取账单详情失败');
+      }
+    };
+
+    const handleCancel = (row) => {
+      ElMessageBox.prompt('请输入取消原因', '取消账单', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /\S+/,
+        inputErrorMessage: '原因不能为空',
+        type: 'warning',
+      }).then(async ({ value }) => {
+        await cancelBill(row.id, value);
+        ElMessage.success('账单已取消');
+        loadData();
+      }).catch(() => {});
     };
 
     const handleConfirmPay = row => {

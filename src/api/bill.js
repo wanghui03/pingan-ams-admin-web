@@ -44,11 +44,20 @@ export const deleteBill = (id) => {
 }
 
 // 确认收款
-export const confirmPayment = (id, data) => {
+export const confirmPayment = (id, paidAmount, transactionNo) => {
   return request({
     url: `/bill/${id}/pay`,
-    method: 'post',
-    data
+    method: 'put',
+    params: { paidAmount, transactionNo }
+  })
+}
+
+// 取消账单
+export const cancelBill = (id, reason) => {
+  return request({
+    url: `/bill/${id}/cancel`,
+    method: 'put',
+    params: { reason }
   })
 }
 

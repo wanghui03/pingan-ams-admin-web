@@ -52,6 +52,40 @@ export const auditContract = (id, data) => {
   })
 }
 
+// 提交审核
+export const submitContract = (id) => {
+  return request({
+    url: `/contract/${id}/submit`,
+    method: 'put'
+  })
+}
+
+// 审核通过
+export const approveContract = (id) => {
+  return request({
+    url: `/contract/${id}/approve`,
+    method: 'put'
+  })
+}
+
+// 审核驳回
+export const rejectContract = (id, reason) => {
+  return request({
+    url: `/contract/${id}/reject`,
+    method: 'put',
+    params: { reason }
+  })
+}
+
+// 终止合同
+export const terminateContract = (id, reason) => {
+  return request({
+    url: `/contract/${id}/terminate`,
+    method: 'put',
+    params: { reason }
+  })
+}
+
 // 获取合同变更列表
 export const getContractChangeList = (params) => {
   return request({

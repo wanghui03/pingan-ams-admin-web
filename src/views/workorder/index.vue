@@ -208,13 +208,79 @@
                 />
             </div>
         </el-dialog>
+
+        <!-- 工单详情弹窗 -->
+        <el-dialog v-model="detailVisible" title="工单详情" width="650px">
+            <div v-if="detailData">
+                <el-descriptions :column="2" border>
+                    <el-descriptions-item label="工单编号">{{ detailData.orderNo }}</el-descriptions-item>
+                    <el-descriptions-item label="工单类型">{{ orderTypeDesc(detailData.orderType) }}</el-descriptions-item>
+                    <el-descriptions-item label="标题" :span="2">{{ detailData.title }}</el-descriptions-item>
+                    <el-descriptions-item label="租客">{{ detailData.tenantName }}</el-descriptions-item>
+                    <el-descriptions-item label="房间">{{ detailData.buildingName }}{{ detailData.roomNo }}</el-descriptions-item>
+                    <el-descriptions-item label="状态">
+                        <el-tag :type="statusTagType(detailData.status)">{{ statusDesc(detailData.status) }}</el-tag>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="创建时间">{{ detailData.createTime }}</el-descriptions-item>
+                    <el-descriptions-item label="描述" :span="2">{{ detailData.description }}</el-descriptions-item>
+                    <el-descriptions-item label="图片" :span="2" v-if="detailData.images">
+                        <div class="detail-images">
+                            <el-image
+                                v-for="(img, index) in detailData.images.split(',')"
+                                :key="index"
+                                :src="img"
+                                :preview-src-list="detailData.images.split(',')"
+                                fit="cover"
+                                style="width: 80px; height: 80px; margin-right: 8px;"
+                            />
+                        </div>
+                    </el-descriptions-item>
+                </el-descriptions>
+
+                <!-- 处理信息 -->
+                <el-descriptions :column="2" border style="margin-top: 15px" v-if="detailData.handlerName">
+                    <template #title>
+                        <span>处理信息</span>
+                    </template>
+                    <el-descriptions-item label="处理人">{{ detailData.handlerName }}</el-descriptions-item>
+                    <el-descriptions-item label="处理时间">{{ detailData.handleTime || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="处理结果" :span="2">{{ detailData.handleResult || '-' }}</el-descriptions-item>
+                    <el-descriptions-item label="处理图片" :span="2" v-if="detailData.handleImages">
+                        <div class="detail-images">
+                            <el-image
+                                v-for="(img, index) in detailData.handleImages.split(',')"
+                                :key="index"
+                                :src="img"
+                                :preview-src-list="detailData.handleImages.split(',')"
+                                fit="cover"
+                                style="width: 80px; height: 80px; margin-right: 8px;"
+                            />
+                        </div>
+                    </el-descriptions-item>
+                </el-descriptions>
+
+                <!-- 评价信息 -->
+                <el-descriptions :column="2" border style="margin-top: 15px" v-if="detailData.rating">
+                    <template #title>
+                        <span>评价信息</span>
+                    </template>
+                    <el-descriptions-item label="评分">
+                        <el-rate :model-value="detailData.rating" disabled />
+                    </el-descriptions-item>
+                    <el-descriptions-item label="评价内容">{{ detailData.ratingContent || '-' }}</el-descriptions-item>
+                </el-descriptions>
+            </div>
+            <template #footer>
+                <el-button @click="detailVisible = false">关闭</el-button>
+            </template>
+        </el-dialog>
     </div>
 </template>
 
 <script setup>
     import { ref, reactive, onMounted } from 'vue';
     import { ElMessage, ElMessageBox } from 'element-plus';
-    import { getWorkOrderList, createWorkOrder, assignWorkOrder, processWorkOrder, closeWorkOrder } from '@/api/workorder';
+    import { getWorkOrderList, createWorkOrder, assignWorkOrder, processWorkOrder, closeWorkOrder, completeWorkOrder, getWorkOrderDetail } from '@/api/workorder';
     import request from '@/utils/request';
 
     const loading = ref(false);
@@ -255,6 +321,10 @@
     const selectedStaff = ref(null);
     const currentWorkOrder = ref(null);
 
+    // 详情弹窗
+    const detailVisible = ref(false);
+    const detailData = ref(null);
+
     // 合同选择弹窗
     const contractSelectVisible = ref(false);
     const contractLoading = ref(false);
@@ -276,6 +346,16 @@
     const statusTagType = status => {
         const map = { 0: 'warning', 1: 'primary', 2: 'success', 3: 'info' };
         return map[status] || 'info';
+    };
+
+    const statusDesc = status => {
+        const map = { 0: '待处理', 1: '处理中', 2: '已完成', 3: '已关闭' };
+        return map[status] || '未知';
+    };
+
+    const orderTypeDesc = type => {
+        const map = { 1: '报修', 2: '投诉', 3: '咨询', 4: '其他' };
+        return map[type] || '未知';
     };
 
     const contractStatusTagType = status => {
@@ -411,8 +491,14 @@
         });
     };
 
-    const handleDetail = row => {
-        ElMessage.info('工单详情功能待完善');
+    const handleDetail = async (row) => {
+      try {
+        const res = await getWorkOrderDetail(row.id);
+        detailData.value = res.data;
+        detailVisible.value = true;
+      } catch (error) {
+        ElMessage.error('获取工单详情失败');
+      }
     };
 
     const handleAssign = row => {

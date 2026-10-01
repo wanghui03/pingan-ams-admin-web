@@ -63,17 +63,37 @@
           }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="250" fixed="right">
+      <el-table-column label="操作" width="320" fixed="right">
         <template #default="{ row }">
           <el-button size="small" @click="handleEdit(row)">编辑</el-button>
           <el-button size="small" @click="handleChange(row)">变更</el-button>
+          <!-- 草稿状态：提交审核 -->
           <el-button
+            v-if="row.status === 0"
             size="small"
-            :type="row.status === 2 ? 'warning' : 'success'"
-            @click="handleToggleStatus(row)"
-          >
-            {{ row.status === 2 ? "终止" : "生效" }}
-          </el-button>
+            type="primary"
+            @click="handleSubmitAudit(row)"
+          >提交审核</el-button>
+          <!-- 待审核状态：审核通过/驳回 -->
+          <el-button
+            v-if="row.status === 1"
+            size="small"
+            type="success"
+            @click="handleApprove(row)"
+          >审核通过</el-button>
+          <el-button
+            v-if="row.status === 1"
+            size="small"
+            type="danger"
+            @click="handleReject(row)"
+          >审核驳回</el-button>
+          <!-- 生效中状态：终止 -->
+          <el-button
+            v-if="row.status === 2"
+            size="small"
+            type="warning"
+            @click="handleTerminate(row)"
+          >终止</el-button>
           <el-popconfirm title="确定删除吗？" @confirm="handleDelete(row.id)">
             <template #reference>
               <el-button size="small" type="danger">删除</el-button>
@@ -169,6 +189,84 @@
         <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 合同变更弹窗 -->
+    <el-dialog v-model="changeDialogVisible" title="发起合同变更" width="600px">
+      <el-alert
+        v-if="currentContract"
+        :title="`合同：${currentContract.contractNo} | 租客：${currentContract.tenantName} | 房间：${currentContract.roomNo}`"
+        type="info"
+        :closable="false"
+        style="margin-bottom: 20px"
+      />
+      <el-form :model="changeForm" :rules="changeRules" ref="changeFormRef" label-width="110px">
+        <el-form-item label="变更类型" prop="changeType">
+          <el-select v-model="changeForm.changeType" style="width: 100%" @change="handleChangeTypeChange">
+            <el-option label="续租" :value="1" />
+            <el-option label="转租" :value="2" />
+            <el-option label="提前退租" :value="3" />
+          </el-select>
+        </el-form-item>
+
+        <!-- 续租字段 -->
+        <template v-if="changeForm.changeType === 1">
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="新开始日期" prop="newStartDate">
+                <el-date-picker v-model="changeForm.newStartDate" type="date" placeholder="选择开始日期" style="width: 100%" value-format="YYYY-MM-DD" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="新结束日期" prop="newEndDate">
+                <el-date-picker v-model="changeForm.newEndDate" type="date" placeholder="选择结束日期" style="width: 100%" value-format="YYYY-MM-DD" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item label="新月租金 (元)" prop="newMonthlyRent">
+            <el-input-number v-model="changeForm.newMonthlyRent" :min="0" :precision="2" style="width: 100%" />
+          </el-form-item>
+        </template>
+
+        <!-- 转租字段 -->
+        <template v-if="changeForm.changeType === 2">
+          <el-form-item label="新租客" prop="newUserId">
+            <el-select v-model="changeForm.newUserId" placeholder="选择新租客" style="width: 100%">
+              <el-option v-for="t in tenantList" :key="t.id" :label="t.name" :value="t.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="转租手续费 (元)">
+            <el-input-number v-model="changeForm.transferFee" :min="0" :precision="2" style="width: 100%" />
+          </el-form-item>
+        </template>
+
+        <!-- 提前退租字段 -->
+        <template v-if="changeForm.changeType === 3">
+          <el-form-item label="退租日期" prop="terminateDate">
+            <el-date-picker v-model="changeForm.terminateDate" type="date" placeholder="选择退租日期" style="width: 100%" value-format="YYYY-MM-DD" />
+          </el-form-item>
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="违约金 (元)">
+                <el-input-number v-model="changeForm.penaltyAmount" :min="0" :precision="2" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="押金退还 (元)">
+                <el-input-number v-model="changeForm.depositRefund" :min="0" :precision="2" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </template>
+
+        <el-form-item label="变更原因" prop="reason">
+          <el-input v-model="changeForm.reason" type="textarea" :rows="3" placeholder="请输入变更原因" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="changeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitChange" :loading="changeLoading">提交申请</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -176,6 +274,8 @@
 import { ref, reactive, onMounted, defineExpose } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '@/utils/request'
+import { createContractChange } from '@/api/contractChange'
+import { submitContract, approveContract, rejectContract, terminateContract } from '@/api/contract'
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -333,7 +433,114 @@ const handleSubmit = async () => {
 }
 
 const handleChange = (row) => {
-  ElMessage.info('合同变更功能开发中...')
+  // 只有生效中的合同才能变更
+  if (row.status !== 2) {
+    ElMessage.warning('只有生效中的合同才能发起变更')
+    return
+  }
+  // 打开变更弹窗，传入合同信息
+  openChangeDialog(row)
+}
+
+// ========== 合同变更弹窗 ==========
+const changeDialogVisible = ref(false)
+const changeLoading = ref(false)
+const changeFormRef = ref(null)
+const currentContract = ref(null)
+
+const changeForm = reactive({
+  changeType: 1,
+  newStartDate: '',
+  newEndDate: '',
+  newMonthlyRent: null,
+  newUserId: null,
+  transferFee: null,
+  terminateDate: '',
+  penaltyAmount: null,
+  depositRefund: null,
+  reason: ''
+})
+
+const changeRules = {
+  changeType: [{ required: true, message: '请选择变更类型', trigger: 'change' }],
+  reason: [{ required: true, message: '请输入变更原因', trigger: 'blur' }]
+}
+
+const openChangeDialog = (row) => {
+  currentContract.value = row
+  Object.assign(changeForm, {
+    changeType: 1,
+    newStartDate: row.endDate, // 续约默认从原结束日期开始
+    newEndDate: '',
+    newMonthlyRent: row.monthlyRent,
+    newUserId: null,
+    transferFee: null,
+    terminateDate: '',
+    penaltyAmount: null,
+    depositRefund: null,
+    reason: ''
+  })
+  changeDialogVisible.value = true
+}
+
+const handleChangeTypeChange = (type) => {
+  // 切换变更类型时重置相关字段
+  if (type === 1) {
+    // 续约
+    changeForm.newStartDate = currentContract.value.endDate
+    changeForm.newMonthlyRent = currentContract.value.monthlyRent
+  } else if (type === 2) {
+    // 转租
+    changeForm.newUserId = null
+    changeForm.transferFee = null
+  } else if (type === 3) {
+    // 提前退租
+    changeForm.terminateDate = ''
+    changeForm.penaltyAmount = null
+    changeForm.depositRefund = null
+  }
+}
+
+const submitChange = async () => {
+  if (!changeFormRef.value) return
+  await changeFormRef.value.validate(async (valid) => {
+    if (valid) {
+      changeLoading.value = true
+      try {
+        const data = {
+          contractId: currentContract.value.id,
+          changeType: changeForm.changeType,
+          reason: changeForm.reason
+        }
+
+        // 根据变更类型填充不同字段
+        if (changeForm.changeType === 1) {
+          // 续约
+          data.newStartDate = changeForm.newStartDate
+          data.newEndDate = changeForm.newEndDate
+          data.newMonthlyRent = changeForm.newMonthlyRent
+        } else if (changeForm.changeType === 2) {
+          // 转租
+          data.newUserId = changeForm.newUserId
+          data.transferFee = changeForm.transferFee
+        } else if (changeForm.changeType === 3) {
+          // 提前退租
+          data.terminateDate = changeForm.terminateDate
+          data.penaltyAmount = changeForm.penaltyAmount
+          data.depositRefund = changeForm.depositRefund
+        }
+
+        await createContractChange(data)
+        ElMessage.success('变更申请已提交')
+        changeDialogVisible.value = false
+        loadData()
+      } catch (error) {
+        ElMessage.error(error.message || '提交失败')
+      } finally {
+        changeLoading.value = false
+      }
+    }
+  })
 }
 
 const handleToggleStatus = (row) => {
@@ -351,6 +558,74 @@ const handleToggleStatus = (row) => {
       loadData()
     } catch (error) {
       ElMessage.error(error.message || `${action}失败`)
+    }
+  }).catch(() => {})
+}
+
+// 提交审核
+const handleSubmitAudit = (row) => {
+  ElMessageBox.confirm('确定要提交该合同进行审核吗？', '提示', {
+    type: 'info'
+  }).then(async () => {
+    try {
+      await submitContract(row.id)
+      ElMessage.success('已提交审核')
+      loadData()
+    } catch (error) {
+      ElMessage.error(error.message || '提交失败')
+    }
+  }).catch(() => {})
+}
+
+// 审核通过
+const handleApprove = (row) => {
+  ElMessageBox.confirm('确定要通过该合同审核吗？通过后将自动生成租金账单', '提示', {
+    type: 'success'
+  }).then(async () => {
+    try {
+      await approveContract(row.id)
+      ElMessage.success('审核通过')
+      loadData()
+    } catch (error) {
+      ElMessage.error(error.message || '操作失败')
+    }
+  }).catch(() => {})
+}
+
+// 审核驳回
+const handleReject = (row) => {
+  ElMessageBox.prompt('请输入驳回原因', '审核驳回', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /\S+/,
+    inputErrorMessage: '原因不能为空',
+    type: 'warning'
+  }).then(async ({ value }) => {
+    try {
+      await rejectContract(row.id, value)
+      ElMessage.success('已驳回')
+      loadData()
+    } catch (error) {
+      ElMessage.error(error.message || '操作失败')
+    }
+  }).catch(() => {})
+}
+
+// 终止合同
+const handleTerminate = (row) => {
+  ElMessageBox.prompt('请输入终止原因', '终止合同', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    inputPattern: /\S+/,
+    inputErrorMessage: '原因不能为空',
+    type: 'warning'
+  }).then(async ({ value }) => {
+    try {
+      await terminateContract(row.id, value)
+      ElMessage.success('合同已终止')
+      loadData()
+    } catch (error) {
+      ElMessage.error(error.message || '操作失败')
     }
   }).catch(() => {})
 }

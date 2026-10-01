@@ -176,10 +176,10 @@ const loadDashboardData = async () => {
   try {
     const res = await getDashboardStats()
     const data = res.data || res || {}
-    
+
     console.log('Dashboard response:', res)
     console.log('Dashboard data:', data)
-    
+
     // 房源概览数据
     stats.totalRooms = Number(data.roomCount || 0)
     stats.vacantRooms = Number(data.vacantRoomCount || 0)
@@ -187,25 +187,41 @@ const loadDashboardData = async () => {
     const rateStr = String(data.occupancyRate || '0%')
     stats.occupancyRate = parseFloat(rateStr) || 0
     stats.activeContracts = Number(data.activeContractCount || 0)
-    
+
     // 租金收入数据（未收/已收）
     stats.monthlyReceivable = Number(data.unpaidAmount || 0)
     stats.monthlyReceived = Number(data.paidAmount || 0)
-    stats.collectionRate = 0 // 后端没有这个字段，暂时设为 0
-    
+    // 收缴率
+    const collectionRateStr = String(data.collectionRate || '0%')
+    stats.collectionRate = parseFloat(collectionRateStr) || 0
+
     // 账单统计
     billStats.value = [
-      { label: '待支付账单', value: Number(data.unpaidAmount || 0) },
+      { label: '待支付账单', value: Number(data.unpaidBillCount || 0) },
       { label: '逾期账单', value: Number(data.overdueBillCount || 0) },
       { label: '本月已收', value: Number(data.paidAmount || 0) }
     ]
-    
-    // 待办事项（工单数）
-    todos.total = Number(data.pendingWorkOrderCount || 0)
-    todos.items = []
-    
-    // 最近合同（后端暂时没有这个字段）
-    recentContracts.value = []
+
+    // 待办事项
+    if (data.todoItems && Array.isArray(data.todoItems)) {
+      todos.total = data.todoItems.length
+      todos.items = data.todoItems.map((item, index) => ({
+        id: index,
+        type: item.type || 'info',
+        content: item.content,
+        time: item.time
+      }))
+    } else {
+      todos.total = 0
+      todos.items = []
+    }
+
+    // 最近合同
+    if (data.recentContracts && Array.isArray(data.recentContracts)) {
+      recentContracts.value = data.recentContracts
+    } else {
+      recentContracts.value = []
+    }
   } catch (error) {
     console.error('加载看板数据失败', error)
   }

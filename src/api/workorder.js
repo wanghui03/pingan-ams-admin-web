@@ -69,3 +69,11 @@ export const closeWorkOrder = (id, data) => {
     data
   })
 }
+
+// 完成工单
+export const completeWorkOrder = (id) => {
+  return request({
+    url: `/work-order/${id}/complete`,
+    method: 'post'
+  })
+}
